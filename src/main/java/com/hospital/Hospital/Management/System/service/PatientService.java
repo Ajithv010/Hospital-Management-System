@@ -1,5 +1,7 @@
 package com.hospital.Hospital.Management.System.service;
 
+import java.util.List;
+
 import org.springframework.stereotype.Service;
 import com.hospital.Hospital.Management.System.entity.Patient;
 import com.hospital.Hospital.Management.System.repository.PatientRepository;
@@ -15,5 +17,9 @@ public class PatientService {
 
     public Patient savePatient(Patient patient) {
         return patientRepository.save(patient);
+    }
+
+    public List<Patient> getAllPatients() {
+        return patientRepository.findAll();
     }
 }
