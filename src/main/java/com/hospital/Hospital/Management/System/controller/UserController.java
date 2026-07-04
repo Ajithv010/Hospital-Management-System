@@ -44,10 +44,11 @@ public class UserController {
         return userService.getUserByUsername(username);
     }
 
-   @PostMapping("/login")
+ @PostMapping("/login")
 public LoginResponse login(@RequestBody LoginRequest request) {
 
-
+    System.out.println("===== LOGIN METHOD CALLED =====");
+    System.out.println("Username: " + request.getUsername());
 
     authenticationManager.authenticate(
             new UsernamePasswordAuthenticationToken(
@@ -55,6 +56,8 @@ public LoginResponse login(@RequestBody LoginRequest request) {
                     request.getPassword()));
 
     String token = jwtService.generateToken(request.getUsername());
+
+    System.out.println("===== LOGIN SUCCESS =====");
 
     return new LoginResponse(token);
 }

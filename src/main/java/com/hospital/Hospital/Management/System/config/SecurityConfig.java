@@ -1,7 +1,6 @@
 package com.hospital.Hospital.Management.System.config;
 
-import com.hospital.Hospital.Management.System.security.CustomUserDetailsService;
-import com.hospital.Hospital.Management.System.security.JwtAuthenticationFilter;
+import java.util.List;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -15,6 +14,13 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.CorsConfigurationSource;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+
+import com.hospital.Hospital.Management.System.security.CustomUserDetailsService;
+import com.hospital.Hospital.Management.System.security.JwtAuthenticationFilter;
 
 @Configuration
 public class SecurityConfig {
@@ -32,6 +38,9 @@ public class SecurityConfig {
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
 
         http
+
+                .cors(cors -> {})
+
                 .csrf(csrf -> csrf.disable())
 
                 .sessionManagement(session ->
@@ -39,7 +48,7 @@ public class SecurityConfig {
 
                 .authorizeHttpRequests(auth -> auth
 
-                        // Public endpoints
+                        // Public Endpoints
                         .requestMatchers(
                                 "/users/login",
                                 "/users",
@@ -47,15 +56,15 @@ public class SecurityConfig {
                                 "/v3/api-docs/**")
                         .permitAll()
 
-                        // Admin only
+                        // Admin Only
                         .requestMatchers("/doctors/**")
                         .hasRole("ADMIN")
 
-                        // Admin or Receptionist
+                        // Admin & Receptionist
                         .requestMatchers("/patients/**")
                         .hasAnyRole("ADMIN", "RECEPTIONIST")
 
-                        // Any authenticated user
+                        // Authenticated Users
                         .requestMatchers(
                                 "/appointments/**",
                                 "/bills/**",
@@ -74,10 +83,38 @@ public class SecurityConfig {
     }
 
     @Bean
+    public CorsConfigurationSource corsConfigurationSource() {
+
+        CorsConfiguration configuration = new CorsConfiguration();
+
+        configuration.setAllowedOrigins(List.of("http://localhost:5173"));
+
+        configuration.setAllowedMethods(List.of(
+                "GET",
+                "POST",
+                "PUT",
+                "DELETE",
+                "OPTIONS"));
+
+        configuration.setAllowedHeaders(List.of("*"));
+
+        configuration.setAllowCredentials(true);
+
+        UrlBasedCorsConfigurationSource source =
+                new UrlBasedCorsConfigurationSource();
+
+        source.registerCorsConfiguration("/**", configuration);
+
+        return source;
+    }
+
+    @Bean
     public DaoAuthenticationProvider authenticationProvider() {
 
         DaoAuthenticationProvider provider = new DaoAuthenticationProvider();
+
         provider.setUserDetailsService(userDetailsService);
+
         provider.setPasswordEncoder(passwordEncoder());
 
         return provider;
