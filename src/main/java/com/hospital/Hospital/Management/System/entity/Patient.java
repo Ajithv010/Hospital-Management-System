@@ -5,6 +5,11 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 
+import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Pattern;
+
 @Entity
 public class Patient {
 
@@ -12,16 +17,26 @@ public class Patient {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long patientId;
 
+    @NotBlank(message = "Name is required")
     private String name;
+
+    @Min(value = 0, message = "Age cannot be negative")
     private int age;
+
+    @NotBlank(message = "Gender is required")
     private String gender;
+
+    @Pattern(regexp = "^[0-9]{10}$", message = "Phone must contain exactly 10 digits")
     private String phone;
+
+    @Email(message = "Invalid email address")
     private String email;
+
+    @NotBlank(message = "Address is required")
     private String address;
 
     // No-argument constructor
     public Patient() {
-
     }
 
     // Parameterized constructor
@@ -35,12 +50,12 @@ public class Patient {
         this.address = address;
     }
 
-    // Getter and Setter for patientId
+    // Getter for patientId
     public Long getPatientId() {
         return patientId;
     }
 
-    // Getter and Setter for name
+    // Getter & Setter for name
     public String getName() {
         return name;
     }
@@ -49,7 +64,7 @@ public class Patient {
         this.name = name;
     }
 
-    // Getter and Setter for age
+    // Getter & Setter for age
     public int getAge() {
         return age;
     }
@@ -58,7 +73,7 @@ public class Patient {
         this.age = age;
     }
 
-    // Getter and Setter for gender
+    // Getter & Setter for gender
     public String getGender() {
         return gender;
     }
@@ -67,7 +82,7 @@ public class Patient {
         this.gender = gender;
     }
 
-    // Getter and Setter for phone
+    // Getter & Setter for phone
     public String getPhone() {
         return phone;
     }
@@ -76,7 +91,7 @@ public class Patient {
         this.phone = phone;
     }
 
-    // Getter and Setter for email
+    // Getter & Setter for email
     public String getEmail() {
         return email;
     }
@@ -85,7 +100,7 @@ public class Patient {
         this.email = email;
     }
 
-    // Getter and Setter for address
+    // Getter & Setter for address
     public String getAddress() {
         return address;
     }
