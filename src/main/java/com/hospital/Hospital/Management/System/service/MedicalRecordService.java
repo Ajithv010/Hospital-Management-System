@@ -4,6 +4,7 @@ import java.util.List;
 
 import org.springframework.stereotype.Service;
 
+import com.hospital.Hospital.Management.System.dto.MedicalRecordRequest;
 import com.hospital.Hospital.Management.System.entity.MedicalRecord;
 import com.hospital.Hospital.Management.System.entity.Patient;
 import com.hospital.Hospital.Management.System.exception.ResourceNotFoundException;
@@ -25,20 +26,22 @@ public class MedicalRecordService {
     }
 
     // Create Medical Record
-    public MedicalRecord saveMedicalRecord(MedicalRecord record) {
+    public MedicalRecord saveMedicalRecord(MedicalRecordRequest request) {
 
-        Patient patient = patientRepository.findById(
-                record.getPatient().getPatientId())
+        Patient patient = patientRepository.findById(request.getPatientId())
                 .orElseThrow(() ->
                         new ResourceNotFoundException("Patient not found"));
 
+        MedicalRecord record = new MedicalRecord();
+
         record.setPatient(patient);
+        record.setDiagnosis(request.getDiagnosis());
+        record.setTreatment(request.getTreatment());
+        record.setAllergies(request.getAllergies());
+        record.setTestResults(request.getTestResults());
+        record.setRecordDate(request.getRecordDate());
 
-        MedicalRecord savedRecord = medicalRecordRepository.save(record);
-
-        return medicalRecordRepository.findById(savedRecord.getRecordId())
-                .orElseThrow(() ->
-                        new ResourceNotFoundException("Medical Record not found"));
+        return medicalRecordRepository.save(record);
     }
 
     // Get All Medical Records
@@ -57,31 +60,33 @@ public class MedicalRecordService {
     // Update Medical Record
     public MedicalRecord updateMedicalRecord(
             Long id,
-            MedicalRecord updatedRecord) {
+            MedicalRecordRequest request) {
 
-        MedicalRecord record = getMedicalRecordById(id);
+        MedicalRecord record = medicalRecordRepository.findById(id)
+                .orElseThrow(() ->
+                        new ResourceNotFoundException("Medical Record not found"));
 
-        Patient patient = patientRepository.findById(
-                updatedRecord.getPatient().getPatientId())
+        Patient patient = patientRepository.findById(request.getPatientId())
                 .orElseThrow(() ->
                         new ResourceNotFoundException("Patient not found"));
 
         record.setPatient(patient);
-        record.setDiagnosis(updatedRecord.getDiagnosis());
-        record.setTreatment(updatedRecord.getTreatment());
-        record.setAllergies(updatedRecord.getAllergies());
-        record.setTestResults(updatedRecord.getTestResults());
-        record.setRecordDate(updatedRecord.getRecordDate());
+        record.setDiagnosis(request.getDiagnosis());
+        record.setTreatment(request.getTreatment());
+        record.setAllergies(request.getAllergies());
+        record.setTestResults(request.getTestResults());
+        record.setRecordDate(request.getRecordDate());
 
-        MedicalRecord savedRecord = medicalRecordRepository.save(record);
-
-        return medicalRecordRepository.findById(savedRecord.getRecordId())
-                .orElseThrow(() ->
-                        new ResourceNotFoundException("Medical Record not found"));
+        return medicalRecordRepository.save(record);
     }
 
     // Delete Medical Record
     public void deleteMedicalRecord(Long id) {
+
+        if (!medicalRecordRepository.existsById(id)) {
+            throw new ResourceNotFoundException("Medical Record not found");
+        }
+
         medicalRecordRepository.deleteById(id);
     }
 }

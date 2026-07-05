@@ -4,6 +4,7 @@ import java.util.List;
 
 import org.springframework.stereotype.Service;
 
+import com.hospital.Hospital.Management.System.dto.PrescriptionRequest;
 import com.hospital.Hospital.Management.System.entity.Doctor;
 import com.hospital.Hospital.Management.System.entity.Patient;
 import com.hospital.Hospital.Management.System.entity.Prescription;
@@ -29,26 +30,27 @@ public class PrescriptionService {
     }
 
     // Create Prescription
-    public Prescription savePrescription(Prescription prescription) {
+    public Prescription savePrescription(PrescriptionRequest request) {
 
-        Patient patient = patientRepository.findById(
-                prescription.getPatient().getPatientId())
+        Patient patient = patientRepository.findById(request.getPatientId())
                 .orElseThrow(() ->
                         new ResourceNotFoundException("Patient not found"));
 
-        Doctor doctor = doctorRepository.findById(
-                prescription.getDoctor().getDoctorId())
+        Doctor doctor = doctorRepository.findById(request.getDoctorId())
                 .orElseThrow(() ->
                         new ResourceNotFoundException("Doctor not found"));
 
+        Prescription prescription = new Prescription();
+
         prescription.setPatient(patient);
         prescription.setDoctor(doctor);
+        prescription.setMedicine(request.getMedicine());
+        prescription.setDosage(request.getDosage());
+        prescription.setDuration(request.getDuration());
+        prescription.setNotes(request.getNotes());
+        prescription.setPrescriptionDate(request.getPrescriptionDate());
 
-        Prescription savedPrescription = prescriptionRepository.save(prescription);
-
-        return prescriptionRepository.findById(savedPrescription.getPrescriptionId())
-                .orElseThrow(() ->
-                        new ResourceNotFoundException("Prescription not found"));
+        return prescriptionRepository.save(prescription);
     }
 
     // Get All Prescriptions
@@ -66,37 +68,38 @@ public class PrescriptionService {
 
     // Update Prescription
     public Prescription updatePrescription(Long id,
-                                           Prescription updatedPrescription) {
+                                           PrescriptionRequest request) {
 
-        Prescription prescription = getPrescriptionById(id);
+        Prescription prescription = prescriptionRepository.findById(id)
+                .orElseThrow(() ->
+                        new ResourceNotFoundException("Prescription not found"));
 
-        Patient patient = patientRepository.findById(
-                updatedPrescription.getPatient().getPatientId())
+        Patient patient = patientRepository.findById(request.getPatientId())
                 .orElseThrow(() ->
                         new ResourceNotFoundException("Patient not found"));
 
-        Doctor doctor = doctorRepository.findById(
-                updatedPrescription.getDoctor().getDoctorId())
+        Doctor doctor = doctorRepository.findById(request.getDoctorId())
                 .orElseThrow(() ->
                         new ResourceNotFoundException("Doctor not found"));
 
         prescription.setPatient(patient);
         prescription.setDoctor(doctor);
-        prescription.setMedicine(updatedPrescription.getMedicine());
-        prescription.setDosage(updatedPrescription.getDosage());
-        prescription.setDuration(updatedPrescription.getDuration());
-        prescription.setNotes(updatedPrescription.getNotes());
-        prescription.setPrescriptionDate(updatedPrescription.getPrescriptionDate());
+        prescription.setMedicine(request.getMedicine());
+        prescription.setDosage(request.getDosage());
+        prescription.setDuration(request.getDuration());
+        prescription.setNotes(request.getNotes());
+        prescription.setPrescriptionDate(request.getPrescriptionDate());
 
-        Prescription savedPrescription = prescriptionRepository.save(prescription);
-
-        return prescriptionRepository.findById(savedPrescription.getPrescriptionId())
-                .orElseThrow(() ->
-                        new ResourceNotFoundException("Prescription not found"));
+        return prescriptionRepository.save(prescription);
     }
 
     // Delete Prescription
     public void deletePrescription(Long id) {
+
+        if (!prescriptionRepository.existsById(id)) {
+            throw new ResourceNotFoundException("Prescription not found");
+        }
+
         prescriptionRepository.deleteById(id);
     }
 }

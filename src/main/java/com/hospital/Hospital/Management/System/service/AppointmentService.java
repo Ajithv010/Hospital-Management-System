@@ -20,9 +20,10 @@ public class AppointmentService {
     private final PatientRepository patientRepository;
     private final DoctorRepository doctorRepository;
 
-    public AppointmentService(AppointmentRepository appointmentRepository,
-                              PatientRepository patientRepository,
-                              DoctorRepository doctorRepository) {
+    public AppointmentService(
+            AppointmentRepository appointmentRepository,
+            PatientRepository patientRepository,
+            DoctorRepository doctorRepository) {
 
         this.appointmentRepository = appointmentRepository;
         this.patientRepository = patientRepository;
@@ -31,10 +32,12 @@ public class AppointmentService {
 
     public Appointment saveAppointment(AppointmentRequest request) {
 
-        Patient patient = patientRepository.findById(request.getPatientId())
+        Patient patient = patientRepository
+                .findById(request.getPatientId())
                 .orElseThrow();
 
-        Doctor doctor = doctorRepository.findById(request.getDoctorId())
+        Doctor doctor = doctorRepository
+                .findById(request.getDoctorId())
                 .orElseThrow();
 
         Appointment appointment = new Appointment();
@@ -42,7 +45,30 @@ public class AppointmentService {
         appointment.setAppointmentDate(request.getAppointmentDate());
         appointment.setAppointmentTime(request.getAppointmentTime());
         appointment.setStatus(request.getStatus());
+        appointment.setPatient(patient);
+        appointment.setDoctor(doctor);
 
+        return appointmentRepository.save(appointment);
+    }
+
+    public Appointment updateAppointment(Long id,
+                                         AppointmentRequest request) {
+
+        Appointment appointment = appointmentRepository
+                .findById(id)
+                .orElseThrow();
+
+        Patient patient = patientRepository
+                .findById(request.getPatientId())
+                .orElseThrow();
+
+        Doctor doctor = doctorRepository
+                .findById(request.getDoctorId())
+                .orElseThrow();
+
+        appointment.setAppointmentDate(request.getAppointmentDate());
+        appointment.setAppointmentTime(request.getAppointmentTime());
+        appointment.setStatus(request.getStatus());
         appointment.setPatient(patient);
         appointment.setDoctor(doctor);
 

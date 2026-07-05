@@ -61,8 +61,8 @@ public class SecurityConfig {
                         .hasRole("ADMIN")
 
                         // Admin & Receptionist
-                        .requestMatchers("/patients/**")
-                        .hasAnyRole("ADMIN", "RECEPTIONIST")
+                       .requestMatchers("/patients/**")
+.authenticated()
 
                         // Authenticated Users
                         .requestMatchers(

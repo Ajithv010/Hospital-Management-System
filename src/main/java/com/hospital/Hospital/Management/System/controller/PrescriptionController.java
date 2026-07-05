@@ -4,9 +4,10 @@ import java.util.List;
 
 import org.springframework.web.bind.annotation.*;
 
+import com.hospital.Hospital.Management.System.dto.PrescriptionRequest;
 import com.hospital.Hospital.Management.System.entity.Prescription;
 import com.hospital.Hospital.Management.System.service.PrescriptionService;
-
+import com.hospital.Hospital.Management.System.dto.PrescriptionRequest;
 import jakarta.validation.Valid;
 
 @RestController
@@ -19,11 +20,12 @@ public class PrescriptionController {
         this.prescriptionService = prescriptionService;
     }
 
-    @PostMapping
-    public Prescription savePrescription(
-            @Valid @RequestBody Prescription prescription) {
-        return prescriptionService.savePrescription(prescription);
-    }
+   @PostMapping
+public Prescription savePrescription(
+        @RequestBody PrescriptionRequest request) {
+
+    return prescriptionService.savePrescription(request);
+}
 
     @GetMapping
     public List<Prescription> getAllPrescriptions() {
@@ -35,13 +37,13 @@ public class PrescriptionController {
         return prescriptionService.getPrescriptionById(id);
     }
 
-    @PutMapping("/{id}")
-    public Prescription updatePrescription(
-            @PathVariable Long id,
-            @Valid @RequestBody Prescription prescription) {
+   @PutMapping("/{id}")
+public Prescription updatePrescription(
+        @PathVariable Long id,
+        @RequestBody PrescriptionRequest request) {
 
-        return prescriptionService.updatePrescription(id, prescription);
-    }
+    return prescriptionService.updatePrescription(id, request);
+}
 
     @DeleteMapping("/{id}")
     public void deletePrescription(@PathVariable Long id) {
