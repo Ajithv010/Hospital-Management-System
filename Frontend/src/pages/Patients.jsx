@@ -6,7 +6,12 @@ function Patients() {
 
     const [patients, setPatients] = useState([]);
 
+    const [loading, setLoading] = useState(true);
+
+    const [search, setSearch] = useState("");
+
     const [isEditing, setIsEditing] = useState(false);
+
     const [editingId, setEditingId] = useState(null);
 
     const [patient, setPatient] = useState({
@@ -22,23 +27,35 @@ function Patients() {
         loadPatients();
     }, []);
 
-    // Load Patients
     const loadPatients = async () => {
+
         try {
+
+            setLoading(true);
+
             const response = await api.get("/patients");
+
             setPatients(response.data);
+
         } catch (error) {
+
             console.error(error);
+
+        } finally {
+
+            setLoading(false);
+
         }
+
     };
 
-    // Save Patient
     const savePatient = async () => {
+
         try {
 
             await api.post("/patients", patient);
 
-            alert("Patient Added Successfully");
+          console.log("Patient Added Successfully");
 
             clearForm();
 
@@ -49,34 +66,50 @@ function Patients() {
             console.error(error);
 
             alert("Failed to Add Patient");
+
         }
+
     };
 
-    // Edit Patient
     const editPatient = (patient) => {
 
         setPatient({
+
             name: patient.name,
+
             age: patient.age,
+
             gender: patient.gender,
+
             phone: patient.phone,
+
             email: patient.email,
+
             address: patient.address
+
         });
 
         setEditingId(patient.patientId);
 
         setIsEditing(true);
+
+        window.scrollTo({
+
+            top: 0,
+
+            behavior: "smooth"
+
+        });
+
     };
 
-    // Update Patient
     const updatePatient = async () => {
 
         try {
 
             await api.put(`/patients/${editingId}`, patient);
 
-            alert("Patient Updated Successfully");
+            console.log("Patient Updated Successfully");
 
             clearForm();
 
@@ -87,23 +120,19 @@ function Patients() {
             console.error(error);
 
             alert("Failed to Update Patient");
+
         }
+
     };
 
-    // Delete Patient
     const deletePatient = async (id) => {
 
-        const confirmDelete = window.confirm(
-            "Are you sure you want to delete this patient?"
-        );
-
-        if (!confirmDelete) return;
+        if (!window.confirm("Delete this patient?")) return;
 
         try {
 
             await api.delete(`/patients/${id}`);
-
-            alert("Patient Deleted Successfully");
+            console.log("Patient Deleted Successfully");
 
             loadPatients();
 
@@ -112,204 +141,439 @@ function Patients() {
             console.error(error);
 
             alert("Failed to Delete Patient");
+
         }
+
     };
 
-    // Clear Form
     const clearForm = () => {
 
         setPatient({
+
             name: "",
+
             age: "",
+
             gender: "",
+
             phone: "",
+
             email: "",
+
             address: ""
+
         });
 
         setEditingId(null);
 
         setIsEditing(false);
+
     };
+
+    const filteredPatients = patients.filter((patient) =>
+
+        patient.name.toLowerCase().includes(search.toLowerCase()) ||
+
+        patient.email.toLowerCase().includes(search.toLowerCase()) ||
+
+        patient.phone.includes(search)
+
+    );
 
     return (
 
         <MainLayout>
 
-            <h2 className="mb-4">Patients</h2>
+<div className="container-fluid">
 
-            <div className="card mb-4 shadow">
+    {/* Header */}
 
-                <div className="card-body">
+    <div className="d-flex justify-content-between align-items-center mb-4">
 
-                    <h5 className="mb-3">
-                        {isEditing ? "Update Patient" : "Add Patient"}
-                    </h5>
+        <div>
 
-                    <div className="row">
+            <h2 className="fw-bold mb-1">
+                Patients
+            </h2>
 
-                        <div className="col-md-4 mb-3">
-                            <input
-                                className="form-control"
-                                placeholder="Name"
-                                value={patient.name}
-                                onChange={(e) =>
-                                    setPatient({ ...patient, name: e.target.value })
-                                }
-                            />
-                        </div>
+            <p className="text-muted mb-0">
+                Manage all registered patients
+            </p>
 
-                        <div className="col-md-2 mb-3">
-                            <input
-                                type="number"
-                                className="form-control"
-                                placeholder="Age"
-                                value={patient.age}
-                                onChange={(e) =>
-                                    setPatient({ ...patient, age: e.target.value })
-                                }
-                            />
-                        </div>
+        </div>
 
-                        <div className="col-md-2 mb-3">
-                            <input
-                                className="form-control"
-                                placeholder="Gender"
-                                value={patient.gender}
-                                onChange={(e) =>
-                                    setPatient({ ...patient, gender: e.target.value })
-                                }
-                            />
-                        </div>
+        <div style={{ width: "300px" }}>
 
-                        <div className="col-md-4 mb-3">
-                            <input
-                                className="form-control"
-                                placeholder="Phone"
-                                value={patient.phone}
-                                onChange={(e) =>
-                                    setPatient({ ...patient, phone: e.target.value })
-                                }
-                            />
-                        </div>
+            <input
+                type="text"
+                className="form-control"
+                placeholder="🔍 Search patient..."
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+            />
 
-                        <div className="col-md-4 mb-3">
-                            <input
-                                className="form-control"
-                                placeholder="Email"
-                                value={patient.email}
-                                onChange={(e) =>
-                                    setPatient({ ...patient, email: e.target.value })
-                                }
-                            />
-                        </div>
+        </div>
 
-                        <div className="col-md-8 mb-3">
-                            <input
-                                className="form-control"
-                                placeholder="Address"
-                                value={patient.address}
-                                onChange={(e) =>
-                                    setPatient({ ...patient, address: e.target.value })
-                                }
-                            />
-                        </div>
+    </div>
 
-                    </div>
+    {/* Patient Form */}
 
-                    {isEditing ? (
+    <div className="card shadow border-0 mb-4">
 
-                        <>
-                            <button
-                                className="btn btn-warning me-2"
-                                onClick={updatePatient}
-                            >
-                                Update Patient
-                            </button>
+        <div className="card-header bg-white">
 
-                            <button
-                                className="btn btn-secondary"
-                                onClick={clearForm}
-                            >
-                                Cancel
-                            </button>
-                        </>
+            <h4 className="mb-0">
 
-                    ) : (
+                {isEditing ? "Update Patient" : "Add New Patient"}
 
-                        <button
-                            className="btn btn-success"
-                            onClick={savePatient}
-                        >
-                            Save Patient
-                        </button>
+            </h4>
 
-                    )}
+        </div>
+
+        <div className="card-body">
+
+            <div className="row g-3">
+
+                <div className="col-md-6">
+
+                    <label className="form-label">
+                        Full Name
+                    </label>
+
+                    <input
+                        type="text"
+                        className="form-control"
+                        placeholder="Enter Name"
+                        value={patient.name}
+                        onChange={(e) =>
+                            setPatient({
+                                ...patient,
+                                name: e.target.value
+                            })
+                        }
+                    />
+
+                </div>
+
+                <div className="col-md-2">
+
+                    <label className="form-label">
+                        Age
+                    </label>
+
+                    <input
+                        type="number"
+                        className="form-control"
+                        placeholder="Age"
+                        value={patient.age}
+                        onChange={(e) =>
+                            setPatient({
+                                ...patient,
+                                age: e.target.value
+                            })
+                        }
+                    />
+
+                </div>
+
+                <div className="col-md-4">
+
+                    <label className="form-label">
+                        Gender
+                    </label>
+
+                    <select
+                        className="form-select"
+                        value={patient.gender}
+                        onChange={(e) =>
+                            setPatient({
+                                ...patient,
+                                gender: e.target.value
+                            })
+                        }
+                    >
+
+                        <option value="">Select Gender</option>
+                        <option>Male</option>
+                        <option>Female</option>
+                        <option>Other</option>
+
+                    </select>
+
+                </div>
+
+                <div className="col-md-6">
+
+                    <label className="form-label">
+                        Phone
+                    </label>
+
+                    <input
+                        className="form-control"
+                        placeholder="Phone Number"
+                        value={patient.phone}
+                        onChange={(e) =>
+                            setPatient({
+                                ...patient,
+                                phone: e.target.value
+                            })
+                        }
+                    />
+
+                </div>
+
+                <div className="col-md-6">
+
+                    <label className="form-label">
+                        Email
+                    </label>
+
+                    <input
+                        type="email"
+                        className="form-control"
+                        placeholder="Email Address"
+                        value={patient.email}
+                        onChange={(e) =>
+                            setPatient({
+                                ...patient,
+                                email: e.target.value
+                            })
+                        }
+                    />
+
+                </div>
+
+                <div className="col-12">
+
+                    <label className="form-label">
+                        Address
+                    </label>
+
+                    <textarea
+                        rows="3"
+                        className="form-control"
+                        placeholder="Patient Address"
+                        value={patient.address}
+                        onChange={(e) =>
+                            setPatient({
+                                ...patient,
+                                address: e.target.value
+                            })
+                        }
+                    />
 
                 </div>
 
             </div>
 
-            <table className="table table-bordered table-hover">
+            <div className="mt-4">
 
-                <thead className="table-dark">
+                {isEditing ? (
+
+                    <>
+                        <button
+                            className="btn btn-warning me-2"
+                            onClick={updatePatient}
+                        >
+                            Update Patient
+                        </button>
+
+                        <button
+                            className="btn btn-secondary"
+                            onClick={clearForm}
+                        >
+                            Cancel
+                        </button>
+                    </>
+
+                ) : (
+
+                    <button
+                        className="btn btn-primary"
+                        onClick={savePatient}
+                    >
+                        Save Patient
+                    </button>
+
+                )}
+
+            </div>
+
+        </div>
+
+    </div>
+    {/* Patient Table */}
+
+<div className="card shadow border-0">
+
+    <div className="card-header bg-white d-flex justify-content-between align-items-center">
+
+        <h4 className="mb-0">
+            Patient List
+        </h4>
+
+        <span className="badge bg-primary">
+            {filteredPatients.length} Patients
+        </span>
+
+    </div>
+
+    <div className="table-responsive">
+
+        <table className="table table-hover align-middle mb-0">
+
+            <thead className="table-light">
+
+                <tr>
+
+                    <th>ID</th>
+                    <th>Name</th>
+                    <th>Age</th>
+                    <th>Gender</th>
+                    <th>Phone</th>
+                    <th>Email</th>
+                    <th>Address</th>
+                    <th className="text-center">Actions</th>
+
+                </tr>
+
+            </thead>
+
+            <tbody>
+
+                {loading ? (
 
                     <tr>
-                        <th>ID</th>
-                        <th>Name</th>
-                        <th>Age</th>
-                        <th>Gender</th>
-                        <th>Phone</th>
-                        <th>Email</th>
-                        <th>Address</th>
-                        <th width="180">Actions</th>
+
+                        <td colSpan="8" className="text-center py-5">
+
+                            <div
+                                className="spinner-border text-primary"
+                                role="status"
+                            ></div>
+
+                        </td>
+
                     </tr>
 
-                </thead>
+                ) : filteredPatients.length === 0 ? (
 
-                <tbody>
+                    <tr>
 
-                    {patients.map((patient) => (
+                        <td
+                            colSpan="8"
+                            className="text-center py-5 text-muted"
+                        >
+
+                            No Patients Found
+
+                        </td>
+
+                    </tr>
+
+                ) : (
+
+                    filteredPatients.map((patient) => (
 
                         <tr key={patient.patientId}>
 
-                            <td>{patient.patientId}</td>
-                            <td>{patient.name}</td>
-                            <td>{patient.age}</td>
-                            <td>{patient.gender}</td>
-                            <td>{patient.phone}</td>
-                            <td>{patient.email}</td>
-                            <td>{patient.address}</td>
+                            <td>
+
+                                #{patient.patientId}
+
+                            </td>
+
+                            <td className="fw-semibold">
+
+                                {patient.name}
+
+                            </td>
 
                             <td>
 
+                                {patient.age}
+
+                            </td>
+
+                            <td>
+
+                                <span
+                                    className={`badge ${
+                                        patient.gender === "Male"
+                                            ? "bg-primary"
+                                            : patient.gender === "Female"
+                                            ? "bg-danger"
+                                            : "bg-secondary"
+                                    }`}
+                                >
+
+                                    {patient.gender}
+
+                                </span>
+
+                            </td>
+
+                            <td>
+
+                                {patient.phone}
+
+                            </td>
+
+                            <td>
+
+                                {patient.email}
+
+                            </td>
+
+                            <td>
+
+                                {patient.address}
+
+                            </td>
+
+                            <td className="text-center">
+
                                 <button
-                                    className="btn btn-warning btn-sm me-2"
+                                    className="btn btn-outline-warning btn-sm me-2"
                                     onClick={() => editPatient(patient)}
                                 >
-                                    Edit
+
+                                    ✏️ Edit
+
                                 </button>
 
                                 <button
-                                    className="btn btn-danger btn-sm"
-                                    onClick={() => deletePatient(patient.patientId)}
+                                    className="btn btn-outline-danger btn-sm"
+                                    onClick={() =>
+                                        deletePatient(patient.patientId)
+                                    }
                                 >
-                                    Delete
+
+                                    🗑 Delete
+
                                 </button>
 
                             </td>
 
                         </tr>
 
-                    ))}
+                    ))
 
-                </tbody>
+                )}
 
-            </table>
+            </tbody>
 
-        </MainLayout>
+        </table>
+
+    </div>
+
+</div>
+        </div>
+
+    </MainLayout>
 
     );
+
 }
 
 export default Patients;
