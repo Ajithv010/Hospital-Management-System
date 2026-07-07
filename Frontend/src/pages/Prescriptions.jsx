@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
 import MainLayout from "../layouts/MainLayout";
 import api from "../services/api";
-
+import { toast } from "react-toastify";
+import Swal from "sweetalert2";
 function Prescriptions() {
 
     const emptyPrescription = {
@@ -110,7 +111,7 @@ function Prescriptions() {
 
             await api.post("/prescriptions", prescription);
 
-            console.log("Prescription Added Successfully");
+            toast.success("Prescription Added Successfully");
 
             clearForm();
 
@@ -120,7 +121,7 @@ function Prescriptions() {
 
             console.error(error);
 
-            alert("Failed to Add Prescription");
+            toast.error("Failed to Add Prescription");
 
         }
 
@@ -172,7 +173,7 @@ function Prescriptions() {
 
             );
 
-            console.log("Prescription Updated Successfully");
+            toast.success("Prescription Updated Successfully");
 
             clearForm();
 
@@ -182,33 +183,44 @@ function Prescriptions() {
 
             console.error(error);
 
-            alert("Failed to Update Prescription");
+            toast.error("Failed to Update Prescription");
 
         }
 
     };
 
-    const deletePrescription = async (id) => {
+ const deletePrescription = async (id) => {
 
-        if (!window.confirm("Delete this prescription?")) return;
+    const result = await Swal.fire({
+        title: "Delete Prescription?",
+        text: "This action cannot be undone.",
+        icon: "warning",
+        showCancelButton: true,
+        confirmButtonColor: "#dc3545",
+        cancelButtonColor: "#6c757d",
+        confirmButtonText: "Yes, Delete",
+        cancelButtonText: "Cancel"
+    });
 
-        try {
+    if (!result.isConfirmed) return;
 
-            await api.delete(`/prescriptions/${id}`);
+    try {
 
-            console.log("Prescription Deleted Successfully");
+        await api.delete(`/prescriptions/${id}`);
 
-            loadPrescriptions();
+        toast.success("Prescription Deleted Successfully");
 
-        } catch (error) {
+        loadPrescriptions();
 
-            console.error(error);
+    } catch (error) {
 
-            alert("Failed to Delete Prescription");
+        console.error(error);
 
-        }
+        toast.error("Failed to Delete Prescription");
 
-    };
+    }
+
+};
 
     const filteredPrescriptions = prescriptions.filter((item) =>
 

@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
 import MainLayout from "../layouts/MainLayout";
 import api from "../services/api";
-
+import { toast } from "react-toastify";
+import Swal from "sweetalert2";
 function MedicalRecords() {
 
     const emptyRecord = {
@@ -89,7 +90,7 @@ function MedicalRecords() {
 
             await api.post("/medical-records", record);
 
-            console.log("Medical Record Added Successfully");
+            toast.success("Medical Record Added Successfully");
 
             clearForm();
 
@@ -99,7 +100,7 @@ function MedicalRecords() {
 
             console.error(error);
 
-            alert("Failed to Add Medical Record");
+            toast.error("Failed to Add Medical Record");
 
         }
 
@@ -149,7 +150,7 @@ function MedicalRecords() {
 
             );
 
-            console.log("Medical Record Updated Successfully");
+            toast.success("Medical Record Updated Successfully");
 
             clearForm();
 
@@ -159,34 +160,44 @@ function MedicalRecords() {
 
             console.error(error);
 
-            alert("Failed to Update Medical Record");
+            toast.error("Failed to Update Medical Record");
 
         }
 
     };
 
-    const deleteRecord = async (id) => {
+   const deleteRecord = async (id) => {
 
-        if (!window.confirm("Delete this medical record?")) return;
+    const result = await Swal.fire({
+        title: "Delete Medical Record?",
+        text: "This action cannot be undone.",
+        icon: "warning",
+        showCancelButton: true,
+        confirmButtonColor: "#dc3545",
+        cancelButtonColor: "#6c757d",
+        confirmButtonText: "Yes, Delete",
+        cancelButtonText: "Cancel"
+    });
 
-        try {
+    if (!result.isConfirmed) return;
 
-            await api.delete(`/medical-records/${id}`);
+    try {
 
-            console.log("Medical Record Deleted Successfully");
+        await api.delete(`/medical-records/${id}`);
 
-            loadRecords();
+        toast.success("Medical Record Deleted Successfully");
 
-        } catch (error) {
+        loadRecords();
 
-            console.error(error);
+    } catch (error) {
 
-            alert("Failed to Delete Medical Record");
+        console.error(error);
 
-        }
+        toast.error("Failed to Delete Medical Record");
 
-    };
+    }
 
+};
     const filteredRecords = records.filter((item) =>
 
         item.patient?.name.toLowerCase().includes(search.toLowerCase()) ||

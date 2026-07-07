@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
 import MainLayout from "../layouts/MainLayout";
 import api from "../services/api";
-
+import { toast } from "react-toastify";
+import Swal from "sweetalert2";
 function Appointments() {
 
     const emptyAppointment = {
@@ -108,7 +109,7 @@ function Appointments() {
 
             await api.post("/appointments", appointment);
 
-            console.log("Appointment Added Successfully");
+            toast.success("Appointment Added Successfully");
 
             clearForm();
 
@@ -118,7 +119,7 @@ function Appointments() {
 
             console.error(error);
 
-            alert("Failed to Add Appointment");
+            toast.error("Failed to Add Appointment");
 
         }
 
@@ -166,7 +167,7 @@ function Appointments() {
 
             );
 
-            console.log("Appointment Updated Successfully");
+            toast.success("Appointment Updated Successfully");
 
             clearForm();
 
@@ -176,7 +177,7 @@ function Appointments() {
 
             console.error(error);
 
-            alert("Failed to Update Appointment");
+            toast.error("Failed to Update Appointment");
 
         }
 
@@ -184,25 +185,36 @@ function Appointments() {
 
     const deleteAppointment = async (id) => {
 
-        if (!window.confirm("Delete this appointment?")) return;
+    const result = await Swal.fire({
+        title: "Delete Appointment?",
+        text: "This action cannot be undone.",
+        icon: "warning",
+        showCancelButton: true,
+        confirmButtonColor: "#dc3545",
+        cancelButtonColor: "#6c757d",
+        confirmButtonText: "Yes, Delete",
+        cancelButtonText: "Cancel"
+    });
 
-        try {
+    if (!result.isConfirmed) return;
 
-            await api.delete(`/appointments/${id}`);
+    try {
 
-            console.log("Appointment Deleted Successfully");
+        await api.delete(`/appointments/${id}`);
 
-            loadAppointments();
+        toast.success("Appointment Deleted Successfully");
 
-        } catch (error) {
+        loadAppointments();
 
-            console.error(error);
+    } catch (error) {
 
-            alert("Failed to Delete Appointment");
+        console.error(error);
 
-        }
+        toast.error("Failed to Delete Appointment");
 
-    };
+    }
+
+};
 
     const filteredAppointments = appointments.filter((item) =>
 
@@ -269,11 +281,12 @@ function Appointments() {
 
                 <div className="col-md-6">
 
-                    <label className="form-label">
+                    <label className="form-label" htmlFor="patientSelect">
                         Patient
                     </label>
 
                     <select
+                        id="patientSelect"
                         className="form-select"
                         value={appointment.patientId}
                         onChange={(e) =>
@@ -307,11 +320,12 @@ function Appointments() {
 
                 <div className="col-md-6">
 
-                    <label className="form-label">
+                    <label className="form-label" htmlFor="doctorSelect">
                         Doctor
                     </label>
 
                     <select
+                        id="doctorSelect"
                         className="form-select"
                         value={appointment.doctorId}
                         onChange={(e) =>

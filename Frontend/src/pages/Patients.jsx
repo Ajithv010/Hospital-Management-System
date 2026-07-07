@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
 import MainLayout from "../layouts/MainLayout";
 import api from "../services/api";
-
+import { toast } from "react-toastify";
+import Swal from "sweetalert2";
 function Patients() {
 
     const [patients, setPatients] = useState([]);
@@ -49,28 +50,56 @@ function Patients() {
 
     };
 
-    const savePatient = async () => {
+   const savePatient = async () => {
+    if (!patient.name.trim()) {
+    toast.error("Patient name is required");
+    return;
+}
 
-        try {
-            console.log(patient);
+if (!patient.age || patient.age <= 0) {
+    toast.error("Enter a valid age");
+    return;
+}
 
-            await api.post("/patients", patient);
+if (!patient.gender) {
+    toast.error("Select gender");
+    return;
+}
 
-          console.log("Patient Added Successfully");
+if (!patient.phone || patient.phone.length !== 10) {
+    toast.error("Phone number must be 10 digits");
+    return;
+}
 
-            clearForm();
+if (!patient.email.includes("@")) {
+    toast.error("Enter a valid email");
+    return;
+}
 
-            loadPatients();
+if (!patient.address.trim()) {
+    toast.error("Address is required");
+    return;
+}
 
-        } catch (error) {
+    try {
 
-            console.error(error);
+        await api.post("/patients", patient);
 
-            alert("Failed to Add Patient");
+        toast.success("Patient Added Successfully");
 
-        }
+        clearForm();
 
-    };
+        loadPatients();
+
+    } catch (error) {
+
+        console.error(error);
+
+        toast.error("Failed to Add Patient");
+
+    }
+
+};
 
     const editPatient = (patient) => {
 
@@ -106,46 +135,58 @@ function Patients() {
 
     const updatePatient = async () => {
 
-        try {
+    try {
 
-            await api.put(`/patients/${editingId}`, patient);
+        await api.put(`/patients/${editingId}`, patient);
 
-            console.log("Patient Updated Successfully");
+        toast.success("Patient Updated Successfully");
 
-            clearForm();
+        clearForm();
 
-            loadPatients();
+        loadPatients();
 
-        } catch (error) {
+    } catch (error) {
 
-            console.error(error);
+        console.error(error);
 
-            alert("Failed to Update Patient");
+        toast.error("Failed to Update Patient");
 
-        }
+    }
 
-    };
+};
 
-    const deletePatient = async (id) => {
+  const deletePatient = async (id) => {
 
-        if (!window.confirm("Delete this patient?")) return;
+    const result = await Swal.fire({
+    title: "Delete Patient?",
+    text: "This action cannot be undone.",
+    icon: "warning",
+    showCancelButton: true,
+    confirmButtonColor: "#dc3545",
+    cancelButtonColor: "#6c757d",
+    confirmButtonText: "Yes, Delete",
+    cancelButtonText: "Cancel"
+});
 
-        try {
+if (!result.isConfirmed) return;
 
-            await api.delete(`/patients/${id}`);
-            console.log("Patient Deleted Successfully");
+try {
 
-            loadPatients();
+    await api.delete(`/patients/${id}`);
 
-        } catch (error) {
+    toast.success("Patient Deleted Successfully");
 
-            console.error(error);
+    loadPatients();
 
-            alert("Failed to Delete Patient");
+} catch (error) {
 
-        }
+    console.error(error);
 
-    };
+    toast.error("Failed to Delete Patient");
+
+}
+
+};
 
     const clearForm = () => {
 

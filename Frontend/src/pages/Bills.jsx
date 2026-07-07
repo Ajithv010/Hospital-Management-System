@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
 import MainLayout from "../layouts/MainLayout";
 import api from "../services/api";
-
+import { toast } from "react-toastify";
+import Swal from "sweetalert2";
 function Bills() {
 
     const emptyBill = {
@@ -88,7 +89,7 @@ function Bills() {
 
             await api.post("/bills", bill);
 
-            console.log("Bill Added Successfully");
+            toast.success("Bill Added Successfully");
 
             clearForm();
 
@@ -98,7 +99,7 @@ function Bills() {
 
             console.error(error);
 
-            alert("Failed to Add Bill");
+            toast.error("Failed to Add Bill");
 
         }
 
@@ -140,7 +141,7 @@ function Bills() {
 
             await api.put(`/bills/${editingId}`, bill);
 
-            console.log("Bill Updated Successfully");
+            toast.success("Bill Updated Successfully");
 
             clearForm();
 
@@ -150,33 +151,44 @@ function Bills() {
 
             console.error(error);
 
-            alert("Failed to Update Bill");
+            toast.error("Failed to Update Bill");
 
         }
 
     };
 
-    const deleteBill = async (id) => {
+   const deleteBill = async (id) => {
 
-        if (!window.confirm("Delete this bill?")) return;
+    const result = await Swal.fire({
+        title: "Delete Bill?",
+        text: "This action cannot be undone.",
+        icon: "warning",
+        showCancelButton: true,
+        confirmButtonColor: "#dc3545",
+        cancelButtonColor: "#6c757d",
+        confirmButtonText: "Yes, Delete",
+        cancelButtonText: "Cancel"
+    });
 
-        try {
+    if (!result.isConfirmed) return;
 
-            await api.delete(`/bills/${id}`);
+    try {
 
-            console.log("Bill Deleted Successfully");
+        await api.delete(`/bills/${id}`);
 
-            loadBills();
+        toast.success("Bill Deleted Successfully");
 
-        } catch (error) {
+        loadBills();
 
-            console.error(error);
+    } catch (error) {
 
-            alert("Failed to Delete Bill");
+        console.error(error);
 
-        }
+        toast.error("Failed to Delete Bill");
 
-    };
+    }
+
+};
 
     const filteredBills = bills.filter((item) =>
 

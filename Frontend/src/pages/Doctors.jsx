@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
 import MainLayout from "../layouts/MainLayout";
 import api from "../services/api";
-
+import { toast } from "react-toastify";
+import Swal from "sweetalert2";
 function Doctors() {
 
     const emptyDoctor = {
@@ -68,7 +69,7 @@ function Doctors() {
 
             await api.post("/doctors", doctor);
 
-            console.log("Doctor Added Successfully");
+            toast.success("Doctor Added Successfully");
 
             clearForm();
 
@@ -78,7 +79,7 @@ function Doctors() {
 
             console.error(error);
 
-            alert("Failed to Add Doctor");
+            toast.error("Failed to Add Doctor");
 
         }
 
@@ -120,7 +121,7 @@ function Doctors() {
 
             await api.put(`/doctors/${editingId}`, doctor);
 
-            console.log("Doctor Updated Successfully");
+            toast.success("Doctor Updated Successfully");
 
             clearForm();
 
@@ -130,7 +131,7 @@ function Doctors() {
 
             console.error(error);
 
-            alert("Failed to Update Doctor");
+            toast.error("Failed to Update Doctor");
 
         }
 
@@ -138,25 +139,36 @@ function Doctors() {
 
     const deleteDoctor = async (id) => {
 
-        if (!window.confirm("Delete this doctor?")) return;
+    const result = await Swal.fire({
+        title: "Delete Doctor?",
+        text: "This action cannot be undone.",
+        icon: "warning",
+        showCancelButton: true,
+        confirmButtonColor: "#dc3545",
+        cancelButtonColor: "#6c757d",
+        confirmButtonText: "Yes, Delete",
+        cancelButtonText: "Cancel"
+    });
 
-        try {
+    if (!result.isConfirmed) return;
 
-            await api.delete(`/doctors/${id}`);
+    try {
 
-            console.log("Doctor Deleted Successfully");
+        await api.delete(`/doctors/${id}`);
 
-            loadDoctors();
+        toast.success("Doctor Deleted Successfully");
 
-        } catch (error) {
+        loadDoctors();
 
-            console.error(error);
+    } catch (error) {
 
-            alert("Failed to Delete Doctor");
+        console.error(error);
 
-        }
+        toast.error("Failed to Delete Doctor");
 
-    };
+    }
+
+};
 
     const filteredDoctors = doctors.filter((doctor) =>
 

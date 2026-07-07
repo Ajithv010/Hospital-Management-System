@@ -1,4 +1,5 @@
 import { Routes, Route } from "react-router-dom";
+import { ToastContainer } from "react-toastify";
 
 import Login from "./pages/Login";
 import Dashboard from "./pages/Dashboard";
@@ -10,19 +11,34 @@ import Prescriptions from "./pages/Prescriptions";
 import MedicalRecords from "./pages/MedicalRecords";
 
 function App() {
-  return (
-    <Routes>
-      <Route path="/" element={<Login />} />
-      <Route path="/login" element={<Login />} />
-      <Route path="/dashboard" element={<Dashboard />} />
-      <Route path="/patients" element={<Patients />} />
-      <Route path="/doctors" element={<Doctors />} />
-      <Route path="/appointments" element={<Appointments />} />
-      <Route path="/bills" element={<Bills />} />
-      <Route path="/prescriptions" element={<Prescriptions />} />
-      <Route path="/medical-records" element={<MedicalRecords />} />
-    </Routes>
-  );
+    return (
+        <>
+
+            <Routes>
+                <Route path="/" element={<Login />} />
+                <Route path="/login" element={<Login />} />
+                <Route path="/dashboard" element={<Dashboard />} />
+                <Route path="/patients" element={<Patients />} />
+                <Route path="/doctors" element={<Doctors />} />
+                <Route path="/appointments" element={<Appointments />} />
+                <Route path="/bills" element={<Bills />} />
+                <Route path="/prescriptions" element={<Prescriptions />} />
+                <Route path="/medical-records" element={<MedicalRecords />} />
+            </Routes>
+
+            <ToastContainer
+                position="top-right"
+                autoClose={3000}
+                hideProgressBar={false}
+                newestOnTop
+                closeOnClick
+                pauseOnHover
+                draggable
+                theme="colored"
+            />
+
+        </>
+    );
 }
 
 export default App;

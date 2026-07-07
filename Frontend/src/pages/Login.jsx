@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import api from "../services/api";
-
+import { toast } from "react-toastify";
 function Login() {
 
     const [username, setUsername] = useState("");
@@ -20,7 +20,7 @@ function Login() {
 
             localStorage.setItem("token", response.data.token);
 
-            alert("Login Successful");
+            toast.success("Login Successful");
 
             navigate("/dashboard");
 
@@ -28,7 +28,7 @@ function Login() {
     console.log(error);
     console.log(error.response);
     console.log(error.response?.data);
-    alert("Login Failed");
+    toast.error("Login Failed");
 }
     };
 
