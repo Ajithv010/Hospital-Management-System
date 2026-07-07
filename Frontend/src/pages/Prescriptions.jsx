@@ -15,51 +15,93 @@ function Prescriptions() {
     };
 
     const [prescriptions, setPrescriptions] = useState([]);
+
     const [patients, setPatients] = useState([]);
+
     const [doctors, setDoctors] = useState([]);
+
+    const [loading, setLoading] = useState(true);
+
+    const [search, setSearch] = useState("");
 
     const [prescription, setPrescription] = useState(emptyPrescription);
 
     const [isEditing, setIsEditing] = useState(false);
+
     const [editingId, setEditingId] = useState(null);
 
     useEffect(() => {
+
         loadPrescriptions();
+
         loadPatients();
+
         loadDoctors();
+
     }, []);
 
     const loadPrescriptions = async () => {
+
         try {
-            const res = await api.get("/prescriptions");
-            setPrescriptions(res.data);
-        } catch (err) {
-            console.error(err);
+
+            setLoading(true);
+
+            const response = await api.get("/prescriptions");
+
+            setPrescriptions(response.data);
+
+        } catch (error) {
+
+            console.error(error);
+
+        } finally {
+
+            setLoading(false);
+
         }
+
     };
 
     const loadPatients = async () => {
+
         try {
-            const res = await api.get("/patients");
-            setPatients(res.data);
-        } catch (err) {
-            console.error(err);
+
+            const response = await api.get("/patients");
+
+            setPatients(response.data);
+
+        } catch (error) {
+
+            console.error(error);
+
         }
+
     };
 
     const loadDoctors = async () => {
+
         try {
-            const res = await api.get("/doctors");
-            setDoctors(res.data);
-        } catch (err) {
-            console.error(err);
+
+            const response = await api.get("/doctors");
+
+            setDoctors(response.data);
+
+        } catch (error) {
+
+            console.error(error);
+
         }
+
     };
 
     const clearForm = () => {
+
         setPrescription(emptyPrescription);
+
         setEditingId(null);
+
         setIsEditing(false);
+
     };
 
     const savePrescription = async () => {
@@ -68,35 +110,54 @@ function Prescriptions() {
 
             await api.post("/prescriptions", prescription);
 
-            alert("Prescription Added Successfully");
+            console.log("Prescription Added Successfully");
 
             clearForm();
 
             loadPrescriptions();
 
-        } catch (err) {
+        } catch (error) {
 
-            console.error(err);
+            console.error(error);
 
             alert("Failed to Add Prescription");
+
         }
+
     };
 
     const editPrescription = (item) => {
 
         setPrescription({
+
             patientId: item.patient.patientId,
+
             doctorId: item.doctor.doctorId,
+
             medicine: item.medicine,
+
             dosage: item.dosage,
+
             duration: item.duration,
+
             notes: item.notes,
+
             prescriptionDate: item.prescriptionDate
+
         });
 
         setEditingId(item.prescriptionId);
 
         setIsEditing(true);
+
+        window.scrollTo({
+
+            top: 0,
+
+            behavior: "smooth"
+
+        });
+
     };
 
     const updatePrescription = async () => {
@@ -104,290 +165,470 @@ function Prescriptions() {
         try {
 
             await api.put(
+
                 `/prescriptions/${editingId}`,
+
                 prescription
+
             );
 
-            alert("Prescription Updated Successfully");
+            console.log("Prescription Updated Successfully");
 
             clearForm();
 
             loadPrescriptions();
 
-        } catch (err) {
+        } catch (error) {
 
-            console.error(err);
+            console.error(error);
 
-            alert("Update Failed");
+            alert("Failed to Update Prescription");
+
         }
+
     };
 
     const deletePrescription = async (id) => {
 
-        if (!window.confirm("Delete Prescription?")) return;
+        if (!window.confirm("Delete this prescription?")) return;
 
         try {
 
             await api.delete(`/prescriptions/${id}`);
 
-            alert("Prescription Deleted");
+            console.log("Prescription Deleted Successfully");
 
             loadPrescriptions();
 
-        } catch (err) {
+        } catch (error) {
 
-            console.error(err);
+            console.error(error);
 
-            alert("Delete Failed");
+            alert("Failed to Delete Prescription");
+
         }
+
     };
+
+    const filteredPrescriptions = prescriptions.filter((item) =>
+
+        item.patient?.name.toLowerCase().includes(search.toLowerCase()) ||
+
+        item.doctor?.name.toLowerCase().includes(search.toLowerCase()) ||
+
+        item.medicine.toLowerCase().includes(search.toLowerCase())
+
+    );
 
     return (
 
         <MainLayout>
+         <div className="container-fluid">
 
-            <h2 className="mb-4">Prescriptions</h2>
+    {/* Header */}
 
-            <div className="card mb-4">
+    <div className="d-flex justify-content-between align-items-center mb-4">
 
-                <div className="card-body">
+        <div>
 
-                    <h5>
-                        {isEditing ? "Update Prescription" : "Add Prescription"}
-                    </h5>
+            <h2 className="fw-bold mb-1">
+                Prescriptions
+            </h2>
 
-                    <div className="row">
+            <p className="text-muted mb-0">
+                Manage patient prescriptions and medicines
+            </p>
 
-                        <div className="col-md-6 mb-3">
+        </div>
 
-                            <select
-                                className="form-control"
-                                value={prescription.patientId}
-                                onChange={(e) =>
-                                    setPrescription({
-                                        ...prescription,
-                                        patientId: e.target.value
-                                    })
-                                }
+        <div style={{ width: "320px" }}>
+
+            <input
+                type="text"
+                className="form-control"
+                placeholder="🔍 Search prescription..."
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+            />
+
+        </div>
+
+    </div>
+
+    {/* Prescription Form */}
+
+    <div className="card shadow border-0 mb-4">
+
+        <div className="card-header bg-white">
+
+            <h4 className="mb-0">
+
+                {isEditing ? "Update Prescription" : "Add New Prescription"}
+
+            </h4>
+
+        </div>
+
+        <div className="card-body">
+
+            <div className="row g-3">
+
+                <div className="col-md-6">
+
+                    <label className="form-label">
+                        Patient
+                    </label>
+
+                    <select
+                        className="form-select"
+                        value={prescription.patientId}
+                        onChange={(e) =>
+                            setPrescription({
+                                ...prescription,
+                                patientId: e.target.value
+                            })
+                        }
+                    >
+
+                        <option value="">
+                            Select Patient
+                        </option>
+
+                        {patients.map((patient) => (
+
+                            <option
+                                key={patient.patientId}
+                                value={patient.patientId}
                             >
+                                {patient.name}
+                            </option>
 
-                                <option value="">Select Patient</option>
+                        ))}
 
-                                {patients.map((p) => (
-                                    <option
-                                        key={p.patientId}
-                                        value={p.patientId}
-                                    >
-                                        {p.name}
-                                    </option>
-                                ))}
+                    </select>
 
-                            </select>
+                </div>
 
-                        </div>
+                <div className="col-md-6">
 
-                        <div className="col-md-6 mb-3">
+                    <label className="form-label">
+                        Doctor
+                    </label>
 
-                            <select
-                                className="form-control"
-                                value={prescription.doctorId}
-                                onChange={(e) =>
-                                    setPrescription({
-                                        ...prescription,
-                                        doctorId: e.target.value
-                                    })
-                                }
+                    <select
+                        className="form-select"
+                        value={prescription.doctorId}
+                        onChange={(e) =>
+                            setPrescription({
+                                ...prescription,
+                                doctorId: e.target.value
+                            })
+                        }
+                    >
+
+                        <option value="">
+                            Select Doctor
+                        </option>
+
+                        {doctors.map((doctor) => (
+
+                            <option
+                                key={doctor.doctorId}
+                                value={doctor.doctorId}
                             >
+                                {doctor.name}
+                            </option>
 
-                                <option value="">Select Doctor</option>
+                        ))}
 
-                                {doctors.map((d) => (
-                                    <option
-                                        key={d.doctorId}
-                                        value={d.doctorId}
-                                    >
-                                        {d.name}
-                                    </option>
-                                ))}
+                    </select>
 
-                            </select>
+                </div>
 
-                        </div>
-                                                <div className="col-md-4 mb-3">
+                <div className="col-md-4">
 
-                            <input
-                                className="form-control"
-                                placeholder="Medicine"
-                                value={prescription.medicine}
-                                onChange={(e) =>
-                                    setPrescription({
-                                        ...prescription,
-                                        medicine: e.target.value
-                                    })
-                                }
-                            />
+                    <label className="form-label">
+                        Medicine
+                    </label>
 
-                        </div>
+                    <input
+                        className="form-control"
+                        placeholder="Medicine Name"
+                        value={prescription.medicine}
+                        onChange={(e) =>
+                            setPrescription({
+                                ...prescription,
+                                medicine: e.target.value
+                            })
+                        }
+                    />
 
-                        <div className="col-md-4 mb-3">
+                </div>
 
-                            <input
-                                className="form-control"
-                                placeholder="Dosage"
-                                value={prescription.dosage}
-                                onChange={(e) =>
-                                    setPrescription({
-                                        ...prescription,
-                                        dosage: e.target.value
-                                    })
-                                }
-                            />
+                <div className="col-md-4">
 
-                        </div>
+                    <label className="form-label">
+                        Dosage
+                    </label>
 
-                        <div className="col-md-4 mb-3">
+                    <input
+                        className="form-control"
+                        placeholder="1 Tablet"
+                        value={prescription.dosage}
+                        onChange={(e) =>
+                            setPrescription({
+                                ...prescription,
+                                dosage: e.target.value
+                            })
+                        }
+                    />
 
-                            <input
-                                className="form-control"
-                                placeholder="Duration"
-                                value={prescription.duration}
-                                onChange={(e) =>
-                                    setPrescription({
-                                        ...prescription,
-                                        duration: e.target.value
-                                    })
-                                }
-                            />
+                </div>
 
-                        </div>
+                <div className="col-md-4">
 
-                        <div className="col-md-8 mb-3">
+                    <label className="form-label">
+                        Duration
+                    </label>
 
-                            <input
-                                className="form-control"
-                                placeholder="Notes"
-                                value={prescription.notes}
-                                onChange={(e) =>
-                                    setPrescription({
-                                        ...prescription,
-                                        notes: e.target.value
-                                    })
-                                }
-                            />
+                    <input
+                        className="form-control"
+                        placeholder="5 Days"
+                        value={prescription.duration}
+                        onChange={(e) =>
+                            setPrescription({
+                                ...prescription,
+                                duration: e.target.value
+                            })
+                        }
+                    />
 
-                        </div>
+                </div>
 
-                        <div className="col-md-4 mb-3">
+                <div className="col-md-8">
 
-                            <input
-                                type="date"
-                                className="form-control"
-                                value={prescription.prescriptionDate}
-                                onChange={(e) =>
-                                    setPrescription({
-                                        ...prescription,
-                                        prescriptionDate: e.target.value
-                                    })
-                                }
-                            />
+                    <label className="form-label">
+                        Notes
+                    </label>
 
-                        </div>
+                    <textarea
+                        rows="3"
+                        className="form-control"
+                        placeholder="Prescription Notes"
+                        value={prescription.notes}
+                        onChange={(e) =>
+                            setPrescription({
+                                ...prescription,
+                                notes: e.target.value
+                            })
+                        }
+                    />
 
-                    </div>
+                </div>
 
-                    {isEditing ? (
+                <div className="col-md-4">
 
-                        <>
-                            <button
-                                className="btn btn-warning me-2"
-                                onClick={updatePrescription}
-                            >
-                                Update Prescription
-                            </button>
+                    <label className="form-label">
+                        Prescription Date
+                    </label>
 
-                            <button
-                                className="btn btn-secondary"
-                                onClick={clearForm}
-                            >
-                                Cancel
-                            </button>
-                        </>
-
-                    ) : (
-
-                        <button
-                            className="btn btn-success"
-                            onClick={savePrescription}
-                        >
-                            Save Prescription
-                        </button>
-
-                    )}
+                    <input
+                        type="date"
+                        className="form-control"
+                        value={prescription.prescriptionDate}
+                        onChange={(e) =>
+                            setPrescription({
+                                ...prescription,
+                                prescriptionDate: e.target.value
+                            })
+                        }
+                    />
 
                 </div>
 
             </div>
 
-            <table className="table table-bordered table-hover">
+            <div className="mt-4">
 
-                <thead className="table-dark">
+                {isEditing ? (
+
+                    <>
+
+                        <button
+                            className="btn btn-warning me-2"
+                            onClick={updatePrescription}
+                        >
+                            Update Prescription
+                        </button>
+
+                        <button
+                            className="btn btn-secondary"
+                            onClick={clearForm}
+                        >
+                            Cancel
+                        </button>
+
+                    </>
+
+                ) : (
+
+                    <button
+                        className="btn btn-primary"
+                        onClick={savePrescription}
+                    >
+                        Save Prescription
+                    </button>
+
+                )}
+
+            </div>
+
+        </div>
+
+    </div>   
+    {/* Prescription Table */}
+
+<div className="card shadow border-0">
+
+    <div className="card-header bg-white d-flex justify-content-between align-items-center">
+
+        <h4 className="mb-0">
+            Prescription List
+        </h4>
+
+        <span className="badge bg-primary">
+            {filteredPrescriptions.length} Prescriptions
+        </span>
+
+    </div>
+
+    <div className="table-responsive">
+
+        <table className="table table-hover align-middle mb-0">
+
+            <thead className="table-light">
+
+                <tr>
+
+                    <th>ID</th>
+                    <th>Patient</th>
+                    <th>Doctor</th>
+                    <th>Medicine</th>
+                    <th>Dosage</th>
+                    <th>Duration</th>
+                    <th>Date</th>
+                    <th className="text-center">Actions</th>
+
+                </tr>
+
+            </thead>
+
+            <tbody>
+
+                {loading ? (
 
                     <tr>
-                        <th>ID</th>
-                        <th>Patient</th>
-                        <th>Doctor</th>
-                        <th>Medicine</th>
-                        <th>Dosage</th>
-                        <th>Duration</th>
-                        <th>Date</th>
-                        <th>Actions</th>
+
+                        <td colSpan="8" className="text-center py-5">
+
+                            <div
+                                className="spinner-border text-primary"
+                                role="status"
+                            ></div>
+
+                        </td>
+
                     </tr>
 
-                </thead>
+                ) : filteredPrescriptions.length === 0 ? (
 
-                <tbody>
+                    <tr>
 
-                    {prescriptions.map((item) => (
+                        <td
+                            colSpan="8"
+                            className="text-center py-5 text-muted"
+                        >
+
+                            No Prescriptions Found
+
+                        </td>
+
+                    </tr>
+
+                ) : (
+
+                    filteredPrescriptions.map((item) => (
 
                         <tr key={item.prescriptionId}>
 
-                            <td>{item.prescriptionId}</td>
-                            <td>{item.patient?.name}</td>
-                            <td>{item.doctor?.name}</td>
-                            <td>{item.medicine}</td>
-                            <td>{item.dosage}</td>
-                            <td>{item.duration}</td>
-                            <td>{item.prescriptionDate}</td>
+                            <td>
+                                #{item.prescriptionId}
+                            </td>
+
+                            <td className="fw-semibold">
+                                {item.patient?.name}
+                            </td>
 
                             <td>
+                                {item.doctor?.name}
+                            </td>
+
+                            <td>
+                                {item.medicine}
+                            </td>
+
+                            <td>
+                                {item.dosage}
+                            </td>
+
+                            <td>
+                                {item.duration}
+                            </td>
+
+                            <td>
+                                {item.prescriptionDate}
+                            </td>
+
+                            <td className="text-center">
 
                                 <button
-                                    className="btn btn-warning btn-sm me-2"
+                                    className="btn btn-outline-warning btn-sm me-2"
                                     onClick={() => editPrescription(item)}
                                 >
-                                    Edit
+                                    ✏️ Edit
                                 </button>
 
                                 <button
-                                    className="btn btn-danger btn-sm"
-                                    onClick={() => deletePrescription(item.prescriptionId)}
+                                    className="btn btn-outline-danger btn-sm"
+                                    onClick={() =>
+                                        deletePrescription(item.prescriptionId)
+                                    }
                                 >
-                                    Delete
+                                    🗑 Delete
                                 </button>
 
                             </td>
 
                         </tr>
 
-                    ))}
+                    ))
 
-                </tbody>
+                )}
 
-            </table>
+            </tbody>
 
-        </MainLayout>
+        </table>
+
+    </div>
+
+</div>
+
+        </div>
+
+    </MainLayout>
 
     );
+
 }
 
 export default Prescriptions;

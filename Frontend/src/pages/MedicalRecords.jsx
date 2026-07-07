@@ -14,34 +14,63 @@ function MedicalRecords() {
     };
 
     const [records, setRecords] = useState([]);
+
     const [patients, setPatients] = useState([]);
+
+    const [loading, setLoading] = useState(true);
+
+    const [search, setSearch] = useState("");
 
     const [record, setRecord] = useState(emptyRecord);
 
     const [isEditing, setIsEditing] = useState(false);
+
     const [editingId, setEditingId] = useState(null);
 
     useEffect(() => {
+
         loadRecords();
+
         loadPatients();
+
     }, []);
 
     const loadRecords = async () => {
+
         try {
-            const res = await api.get("/medical-records");
-            setRecords(res.data);
-        } catch (err) {
-            console.error(err);
+
+            setLoading(true);
+
+            const response = await api.get("/medical-records");
+
+            setRecords(response.data);
+
+        } catch (error) {
+
+            console.error(error);
+
+        } finally {
+
+            setLoading(false);
+
         }
+
     };
 
     const loadPatients = async () => {
+
         try {
-            const res = await api.get("/patients");
-            setPatients(res.data);
-        } catch (err) {
-            console.error(err);
+
+            const response = await api.get("/patients");
+
+            setPatients(response.data);
+
+        } catch (error) {
+
+            console.error(error);
+
         }
+
     };
 
     const clearForm = () => {
@@ -51,6 +80,7 @@ function MedicalRecords() {
         setEditingId(null);
 
         setIsEditing(false);
+
     };
 
     const saveRecord = async () => {
@@ -59,34 +89,52 @@ function MedicalRecords() {
 
             await api.post("/medical-records", record);
 
-            alert("Medical Record Added Successfully");
+            console.log("Medical Record Added Successfully");
 
             clearForm();
 
             loadRecords();
 
-        } catch (err) {
+        } catch (error) {
 
-            console.error(err);
+            console.error(error);
 
             alert("Failed to Add Medical Record");
+
         }
+
     };
 
     const editRecord = (item) => {
 
         setRecord({
+
             patientId: item.patient.patientId,
+
             diagnosis: item.diagnosis,
+
             treatment: item.treatment,
+
             allergies: item.allergies,
+
             testResults: item.testResults,
+
             recordDate: item.recordDate
+
         });
 
         setEditingId(item.recordId);
 
         setIsEditing(true);
+
+        window.scrollTo({
+
+            top: 0,
+
+            behavior: "smooth"
+
+        });
+
     };
 
     const updateRecord = async () => {
@@ -94,266 +142,452 @@ function MedicalRecords() {
         try {
 
             await api.put(
+
                 `/medical-records/${editingId}`,
+
                 record
+
             );
 
-            alert("Medical Record Updated Successfully");
+            console.log("Medical Record Updated Successfully");
 
             clearForm();
 
             loadRecords();
 
-        } catch (err) {
+        } catch (error) {
 
-            console.error(err);
+            console.error(error);
 
-            alert("Update Failed");
+            alert("Failed to Update Medical Record");
+
         }
+
     };
 
     const deleteRecord = async (id) => {
 
-        if (!window.confirm("Delete Medical Record?")) return;
+        if (!window.confirm("Delete this medical record?")) return;
 
         try {
 
             await api.delete(`/medical-records/${id}`);
 
-            alert("Medical Record Deleted");
+            console.log("Medical Record Deleted Successfully");
 
             loadRecords();
 
-        } catch (err) {
+        } catch (error) {
 
-            console.error(err);
+            console.error(error);
 
-            alert("Delete Failed");
+            alert("Failed to Delete Medical Record");
+
         }
+
     };
+
+    const filteredRecords = records.filter((item) =>
+
+        item.patient?.name.toLowerCase().includes(search.toLowerCase()) ||
+
+        item.diagnosis.toLowerCase().includes(search.toLowerCase()) ||
+
+        item.treatment.toLowerCase().includes(search.toLowerCase())
+
+    );
 
     return (
 
         <MainLayout>
 
-            <h2 className="mb-4">
+<div className="container-fluid">
+
+    {/* Header */}
+
+    <div className="d-flex justify-content-between align-items-center mb-4">
+
+        <div>
+
+            <h2 className="fw-bold mb-1">
                 Medical Records
             </h2>
 
-            <div className="card mb-4">
+            <p className="text-muted mb-0">
+                Manage patient diagnoses, treatments and medical history
+            </p>
 
-                <div className="card-body">
+        </div>
 
-                    <h5>
-                        {isEditing ? "Update Medical Record" : "Add Medical Record"}
-                    </h5>
+        <div style={{ width: "320px" }}>
 
-                    <div className="row">
+            <input
+                type="text"
+                className="form-control"
+                placeholder="🔍 Search medical record..."
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+            />
 
-                        <div className="col-md-6 mb-3">
+        </div>
 
-                            <select
-                                className="form-control"
-                                value={record.patientId}
-                                onChange={(e) =>
-                                    setRecord({
-                                        ...record,
-                                        patientId: e.target.value
-                                    })
-                                }
+    </div>
+
+    {/* Medical Record Form */}
+
+    <div className="card shadow border-0 mb-4">
+
+        <div className="card-header bg-white">
+
+            <h4 className="mb-0">
+
+                {isEditing ? "Update Medical Record" : "Add New Medical Record"}
+
+            </h4>
+
+        </div>
+
+        <div className="card-body">
+
+            <div className="row g-3">
+
+                <div className="col-md-6">
+
+                    <label className="form-label">
+                        Patient
+                    </label>
+
+                    <select
+                        className="form-select"
+                        value={record.patientId}
+                        onChange={(e) =>
+                            setRecord({
+                                ...record,
+                                patientId: e.target.value
+                            })
+                        }
+                    >
+
+                        <option value="">
+                            Select Patient
+                        </option>
+
+                        {patients.map((patient) => (
+
+                            <option
+                                key={patient.patientId}
+                                value={patient.patientId}
                             >
+                                {patient.name}
+                            </option>
 
-                                <option value="">
-                                    Select Patient
-                                </option>
+                        ))}
 
-                                {patients.map((p) => (
-                                    <option
-                                        key={p.patientId}
-                                        value={p.patientId}
-                                    >
-                                        {p.name}
-                                    </option>
-                                ))}
+                    </select>
 
-                            </select>
+                </div>
 
-                        </div>
+                <div className="col-md-6">
 
-                        <div className="col-md-6 mb-3">
+                    <label className="form-label">
+                        Diagnosis
+                    </label>
 
-                            <input
-                                className="form-control"
-                                placeholder="Diagnosis"
-                                value={record.diagnosis}
-                                onChange={(e) =>
-                                    setRecord({
-                                        ...record,
-                                        diagnosis: e.target.value
-                                    })
-                                }
-                            />
+                    <input
+                        className="form-control"
+                        placeholder="Enter Diagnosis"
+                        value={record.diagnosis}
+                        onChange={(e) =>
+                            setRecord({
+                                ...record,
+                                diagnosis: e.target.value
+                            })
+                        }
+                    />
 
-                        </div>
-                                                <div className="col-md-6 mb-3">
+                </div>
 
-                            <input
-                                className="form-control"
-                                placeholder="Treatment"
-                                value={record.treatment}
-                                onChange={(e) =>
-                                    setRecord({
-                                        ...record,
-                                        treatment: e.target.value
-                                    })
-                                }
-                            />
+                <div className="col-md-6">
 
-                        </div>
+                    <label className="form-label">
+                        Treatment
+                    </label>
 
-                        <div className="col-md-6 mb-3">
+                    <input
+                        className="form-control"
+                        placeholder="Treatment"
+                        value={record.treatment}
+                        onChange={(e) =>
+                            setRecord({
+                                ...record,
+                                treatment: e.target.value
+                            })
+                        }
+                    />
 
-                            <input
-                                className="form-control"
-                                placeholder="Allergies"
-                                value={record.allergies}
-                                onChange={(e) =>
-                                    setRecord({
-                                        ...record,
-                                        allergies: e.target.value
-                                    })
-                                }
-                            />
+                </div>
 
-                        </div>
+                <div className="col-md-6">
 
-                        <div className="col-md-6 mb-3">
+                    <label className="form-label">
+                        Allergies
+                    </label>
 
-                            <input
-                                className="form-control"
-                                placeholder="Test Results"
-                                value={record.testResults}
-                                onChange={(e) =>
-                                    setRecord({
-                                        ...record,
-                                        testResults: e.target.value
-                                    })
-                                }
-                            />
+                    <input
+                        className="form-control"
+                        placeholder="Allergies"
+                        value={record.allergies}
+                        onChange={(e) =>
+                            setRecord({
+                                ...record,
+                                allergies: e.target.value
+                            })
+                        }
+                    />
 
-                        </div>
+                </div>
 
-                        <div className="col-md-6 mb-3">
+                <div className="col-md-8">
 
-                            <input
-                                type="date"
-                                className="form-control"
-                                value={record.recordDate}
-                                onChange={(e) =>
-                                    setRecord({
-                                        ...record,
-                                        recordDate: e.target.value
-                                    })
-                                }
-                            />
+                    <label className="form-label">
+                        Test Results
+                    </label>
 
-                        </div>
+                    <textarea
+                        rows="3"
+                        className="form-control"
+                        placeholder="Enter Test Results"
+                        value={record.testResults}
+                        onChange={(e) =>
+                            setRecord({
+                                ...record,
+                                testResults: e.target.value
+                            })
+                        }
+                    />
 
-                    </div>
+                </div>
 
-                    {isEditing ? (
+                <div className="col-md-4">
 
-                        <>
-                            <button
-                                className="btn btn-warning me-2"
-                                onClick={updateRecord}
-                            >
-                                Update Medical Record
-                            </button>
+                    <label className="form-label">
+                        Record Date
+                    </label>
 
-                            <button
-                                className="btn btn-secondary"
-                                onClick={clearForm}
-                            >
-                                Cancel
-                            </button>
-                        </>
-
-                    ) : (
-
-                        <button
-                            className="btn btn-success"
-                            onClick={saveRecord}
-                        >
-                            Save Medical Record
-                        </button>
-
-                    )}
+                    <input
+                        type="date"
+                        className="form-control"
+                        value={record.recordDate}
+                        onChange={(e) =>
+                            setRecord({
+                                ...record,
+                                recordDate: e.target.value
+                            })
+                        }
+                    />
 
                 </div>
 
             </div>
 
-            <table className="table table-bordered table-hover">
+            <div className="mt-4">
 
-                <thead className="table-dark">
+                {isEditing ? (
+
+                    <>
+
+                        <button
+                            className="btn btn-warning me-2"
+                            onClick={updateRecord}
+                        >
+                            Update Medical Record
+                        </button>
+
+                        <button
+                            className="btn btn-secondary"
+                            onClick={clearForm}
+                        >
+                            Cancel
+                        </button>
+
+                    </>
+
+                ) : (
+
+                    <button
+                        className="btn btn-primary"
+                        onClick={saveRecord}
+                    >
+                        Save Medical Record
+                    </button>
+
+                )}
+
+            </div>
+
+        </div>
+
+    </div>
+    {/* Medical Records Table */}
+
+<div className="card shadow border-0">
+
+    <div className="card-header bg-white d-flex justify-content-between align-items-center">
+
+        <h4 className="mb-0">
+            Medical Records
+        </h4>
+
+        <span className="badge bg-primary">
+            {filteredRecords.length} Records
+        </span>
+
+    </div>
+
+    <div className="table-responsive">
+
+        <table className="table table-hover align-middle mb-0">
+
+            <thead className="table-light">
+
+                <tr>
+
+                    <th>ID</th>
+                    <th>Patient</th>
+                    <th>Diagnosis</th>
+                    <th>Treatment</th>
+                    <th>Allergies</th>
+                    <th>Test Results</th>
+                    <th>Date</th>
+                    <th className="text-center">Actions</th>
+
+                </tr>
+
+            </thead>
+
+            <tbody>
+
+                {loading ? (
 
                     <tr>
-                        <th>ID</th>
-                        <th>Patient</th>
-                        <th>Diagnosis</th>
-                        <th>Treatment</th>
-                        <th>Allergies</th>
-                        <th>Test Results</th>
-                        <th>Date</th>
-                        <th>Actions</th>
+
+                        <td
+                            colSpan="8"
+                            className="text-center py-5"
+                        >
+
+                            <div
+                                className="spinner-border text-primary"
+                                role="status"
+                            ></div>
+
+                        </td>
+
                     </tr>
 
-                </thead>
+                ) : filteredRecords.length === 0 ? (
 
-                <tbody>
+                    <tr>
 
-                    {records.map((item) => (
+                        <td
+                            colSpan="8"
+                            className="text-center py-5 text-muted"
+                        >
+
+                            No Medical Records Found
+
+                        </td>
+
+                    </tr>
+
+                ) : (
+
+                    filteredRecords.map((item) => (
 
                         <tr key={item.recordId}>
 
-                            <td>{item.recordId}</td>
-                            <td>{item.patient?.name}</td>
-                            <td>{item.diagnosis}</td>
-                            <td>{item.treatment}</td>
-                            <td>{item.allergies}</td>
-                            <td>{item.testResults}</td>
-                            <td>{item.recordDate}</td>
+                            <td>
+
+                                #{item.recordId}
+
+                            </td>
+
+                            <td className="fw-semibold">
+
+                                {item.patient?.name}
+
+                            </td>
 
                             <td>
 
+                                {item.diagnosis}
+
+                            </td>
+
+                            <td>
+
+                                {item.treatment}
+
+                            </td>
+
+                            <td>
+
+                                {item.allergies}
+
+                            </td>
+
+                            <td>
+
+                                {item.testResults}
+
+                            </td>
+
+                            <td>
+
+                                {item.recordDate}
+
+                            </td>
+
+                            <td className="text-center">
+
                                 <button
-                                    className="btn btn-warning btn-sm me-2"
+                                    className="btn btn-outline-warning btn-sm me-2"
                                     onClick={() => editRecord(item)}
                                 >
-                                    Edit
+                                    ✏️ Edit
                                 </button>
 
                                 <button
-                                    className="btn btn-danger btn-sm"
-                                    onClick={() => deleteRecord(item.recordId)}
+                                    className="btn btn-outline-danger btn-sm"
+                                    onClick={() =>
+                                        deleteRecord(item.recordId)
+                                    }
                                 >
-                                    Delete
+                                    🗑 Delete
                                 </button>
 
                             </td>
 
                         </tr>
 
-                    ))}
+                    ))
 
-                </tbody>
+                )}
 
-            </table>
+            </tbody>
 
-        </MainLayout>
+        </table>
+
+    </div>
+
+</div>
+
+        </div>
+
+    </MainLayout>
 
     );
+
 }
 
 export default MedicalRecords;

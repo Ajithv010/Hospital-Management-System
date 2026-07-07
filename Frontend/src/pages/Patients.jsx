@@ -52,6 +52,7 @@ function Patients() {
     const savePatient = async () => {
 
         try {
+            console.log(patient);
 
             await api.post("/patients", patient);
 

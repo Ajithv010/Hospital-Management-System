@@ -13,45 +13,83 @@ function Appointments() {
     };
 
     const [appointments, setAppointments] = useState([]);
+
     const [patients, setPatients] = useState([]);
+
     const [doctors, setDoctors] = useState([]);
+
+    const [loading, setLoading] = useState(true);
+
+    const [search, setSearch] = useState("");
 
     const [appointment, setAppointment] = useState(emptyAppointment);
 
     const [isEditing, setIsEditing] = useState(false);
+
     const [editingId, setEditingId] = useState(null);
 
     useEffect(() => {
+
         loadAppointments();
+
         loadPatients();
+
         loadDoctors();
+
     }, []);
 
     const loadAppointments = async () => {
+
         try {
-            const res = await api.get("/appointments");
-            setAppointments(res.data);
-        } catch (err) {
-            console.error(err);
+
+            setLoading(true);
+
+            const response = await api.get("/appointments");
+
+            setAppointments(response.data);
+
+        } catch (error) {
+
+            console.error(error);
+
+        } finally {
+
+            setLoading(false);
+
         }
+
     };
 
     const loadPatients = async () => {
+
         try {
-            const res = await api.get("/patients");
-            setPatients(res.data);
-        } catch (err) {
-            console.error(err);
+
+            const response = await api.get("/patients");
+
+            setPatients(response.data);
+
+        } catch (error) {
+
+            console.error(error);
+
         }
+
     };
 
     const loadDoctors = async () => {
+
         try {
-            const res = await api.get("/doctors");
-            setDoctors(res.data);
-        } catch (err) {
-            console.error(err);
+
+            const response = await api.get("/doctors");
+
+            setDoctors(response.data);
+
+        } catch (error) {
+
+            console.error(error);
+
         }
+
     };
 
     const clearForm = () => {
@@ -61,6 +99,7 @@ function Appointments() {
         setEditingId(null);
 
         setIsEditing(false);
+
     };
 
     const saveAppointment = async () => {
@@ -69,33 +108,50 @@ function Appointments() {
 
             await api.post("/appointments", appointment);
 
-            alert("Appointment Added Successfully");
+            console.log("Appointment Added Successfully");
 
             clearForm();
 
             loadAppointments();
 
-        } catch (err) {
+        } catch (error) {
 
-            console.error(err);
+            console.error(error);
 
             alert("Failed to Add Appointment");
+
         }
+
     };
 
     const editAppointment = (item) => {
 
         setAppointment({
+
             patientId: item.patient.patientId,
+
             doctorId: item.doctor.doctorId,
+
             appointmentDate: item.appointmentDate,
+
             appointmentTime: item.appointmentTime,
+
             status: item.status
+
         });
 
         setEditingId(item.appointmentId);
 
         setIsEditing(true);
+
+        window.scrollTo({
+
+            top: 0,
+
+            behavior: "smooth"
+
+        });
+
     };
 
     const updateAppointment = async () => {
@@ -103,267 +159,484 @@ function Appointments() {
         try {
 
             await api.put(
+
                 `/appointments/${editingId}`,
+
                 appointment
+
             );
 
-            alert("Appointment Updated Successfully");
+            console.log("Appointment Updated Successfully");
 
             clearForm();
 
             loadAppointments();
 
-        } catch (err) {
+        } catch (error) {
 
-            console.error(err);
+            console.error(error);
 
-            alert("Update Failed");
+            alert("Failed to Update Appointment");
+
         }
+
     };
 
     const deleteAppointment = async (id) => {
 
-        if (!window.confirm("Delete Appointment?")) return;
+        if (!window.confirm("Delete this appointment?")) return;
 
         try {
 
             await api.delete(`/appointments/${id}`);
 
-            alert("Appointment Deleted");
+            console.log("Appointment Deleted Successfully");
 
             loadAppointments();
 
-        } catch (err) {
+        } catch (error) {
 
-            console.error(err);
+            console.error(error);
 
-            alert("Delete Failed");
+            alert("Failed to Delete Appointment");
+
         }
+
     };
+
+    const filteredAppointments = appointments.filter((item) =>
+
+        item.patient?.name.toLowerCase().includes(search.toLowerCase()) ||
+
+        item.doctor?.name.toLowerCase().includes(search.toLowerCase()) ||
+
+        item.status.toLowerCase().includes(search.toLowerCase())
+
+    );
 
     return (
 
         <MainLayout>
+            <div className="container-fluid">
 
-            <h2 className="mb-4">
+    {/* Header */}
+
+    <div className="d-flex justify-content-between align-items-center mb-4">
+
+        <div>
+
+            <h2 className="fw-bold mb-1">
                 Appointments
             </h2>
 
-            <div className="card mb-4">
+            <p className="text-muted mb-0">
+                Schedule and manage patient appointments
+            </p>
 
-                <div className="card-body">
+        </div>
 
-                    <h5>
-                        {isEditing ? "Update Appointment" : "Add Appointment"}
-                    </h5>
+        <div style={{ width: "320px" }}>
 
-                    <div className="row">
+            <input
+                type="text"
+                className="form-control"
+                placeholder="🔍 Search appointment..."
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+            />
 
-                        <div className="col-md-6 mb-3">
+        </div>
 
-                            <select
-                                className="form-control"
-                                value={appointment.patientId}
-                                onChange={(e) =>
-                                    setAppointment({
-                                        ...appointment,
-                                        patientId: e.target.value
-                                    })
-                                }
+    </div>
+
+    {/* Appointment Form */}
+
+    <div className="card shadow border-0 mb-4">
+
+        <div className="card-header bg-white">
+
+            <h4 className="mb-0">
+
+                {isEditing ? "Update Appointment" : "New Appointment"}
+
+            </h4>
+
+        </div>
+
+        <div className="card-body">
+
+            <div className="row g-3">
+
+                <div className="col-md-6">
+
+                    <label className="form-label">
+                        Patient
+                    </label>
+
+                    <select
+                        className="form-select"
+                        value={appointment.patientId}
+                        onChange={(e) =>
+                            setAppointment({
+                                ...appointment,
+                                patientId: e.target.value
+                            })
+                        }
+                    >
+
+                        <option value="">
+                            Select Patient
+                        </option>
+
+                        {patients.map((patient) => (
+
+                            <option
+                                key={patient.patientId}
+                                value={patient.patientId}
                             >
 
-                                <option value="">
-                                    Select Patient
-                                </option>
+                                {patient.name}
 
-                                {patients.map((p) => (
-                                    <option
-                                        key={p.patientId}
-                                        value={p.patientId}
-                                    >
-                                        {p.name}
-                                    </option>
-                                ))}
+                            </option>
 
-                            </select>
+                        ))}
 
-                        </div>
+                    </select>
 
-                        <div className="col-md-6 mb-3">
+                </div>
 
-                            <select
-                                className="form-control"
-                                value={appointment.doctorId}
-                                onChange={(e) =>
-                                    setAppointment({
-                                        ...appointment,
-                                        doctorId: e.target.value
-                                    })
-                                }
+                <div className="col-md-6">
+
+                    <label className="form-label">
+                        Doctor
+                    </label>
+
+                    <select
+                        className="form-select"
+                        value={appointment.doctorId}
+                        onChange={(e) =>
+                            setAppointment({
+                                ...appointment,
+                                doctorId: e.target.value
+                            })
+                        }
+                    >
+
+                        <option value="">
+                            Select Doctor
+                        </option>
+
+                        {doctors.map((doctor) => (
+
+                            <option
+                                key={doctor.doctorId}
+                                value={doctor.doctorId}
                             >
 
-                                <option value="">
-                                    Select Doctor
-                                </option>
+                                {doctor.name}
 
-                                {doctors.map((d) => (
-                                    <option
-                                        key={d.doctorId}
-                                        value={d.doctorId}
-                                    >
-                                        {d.name}
-                                    </option>
-                                ))}
+                            </option>
 
-                            </select>
+                        ))}
 
-                        </div>
-                                                <div className="col-md-4 mb-3">
+                    </select>
 
-                            <input
-                                type="date"
-                                className="form-control"
-                                value={appointment.appointmentDate}
-                                onChange={(e) =>
-                                    setAppointment({
-                                        ...appointment,
-                                        appointmentDate: e.target.value
-                                    })
-                                }
-                            />
+                </div>
 
-                        </div>
+                <div className="col-md-4">
 
-                        <div className="col-md-4 mb-3">
+                    <label className="form-label">
+                        Appointment Date
+                    </label>
 
-                            <input
-                                type="time"
-                                className="form-control"
-                                value={appointment.appointmentTime}
-                                onChange={(e) =>
-                                    setAppointment({
-                                        ...appointment,
-                                        appointmentTime: e.target.value
-                                    })
-                                }
-                            />
+                    <input
+                        type="date"
+                        className="form-control"
+                        value={appointment.appointmentDate}
+                        onChange={(e) =>
+                            setAppointment({
+                                ...appointment,
+                                appointmentDate: e.target.value
+                            })
+                        }
+                    />
 
-                        </div>
+                </div>
 
-                        <div className="col-md-4 mb-3">
+                <div className="col-md-4">
 
-                            <select
-                                className="form-control"
-                                value={appointment.status}
-                                onChange={(e) =>
-                                    setAppointment({
-                                        ...appointment,
-                                        status: e.target.value
-                                    })
-                                }
-                            >
-                                <option>Scheduled</option>
-                                <option>Completed</option>
-                                <option>Cancelled</option>
-                            </select>
+                    <label className="form-label">
+                        Appointment Time
+                    </label>
 
-                        </div>
+                    <input
+                        type="time"
+                        className="form-control"
+                        value={appointment.appointmentTime}
+                        onChange={(e) =>
+                            setAppointment({
+                                ...appointment,
+                                appointmentTime: e.target.value
+                            })
+                        }
+                    />
 
-                    </div>
+                </div>
 
-                    {isEditing ? (
+                <div className="col-md-4">
 
-                        <>
-                            <button
-                                className="btn btn-warning me-2"
-                                onClick={updateAppointment}
-                            >
-                                Update Appointment
-                            </button>
+                    <label className="form-label">
+                        Status
+                    </label>
 
-                            <button
-                                className="btn btn-secondary"
-                                onClick={clearForm}
-                            >
-                                Cancel
-                            </button>
-                        </>
+                    <select
+                        className="form-select"
+                        value={appointment.status}
+                        onChange={(e) =>
+                            setAppointment({
+                                ...appointment,
+                                status: e.target.value
+                            })
+                        }
+                    >
 
-                    ) : (
+                        <option>Scheduled</option>
+                        <option>Completed</option>
+                        <option>Cancelled</option>
 
-                        <button
-                            className="btn btn-success"
-                            onClick={saveAppointment}
-                        >
-                            Save Appointment
-                        </button>
-
-                    )}
+                    </select>
 
                 </div>
 
             </div>
 
-            <table className="table table-bordered table-hover">
+            <div className="mt-4">
 
-                <thead className="table-dark">
+                {isEditing ? (
+
+                    <>
+
+                        <button
+                            className="btn btn-warning me-2"
+                            onClick={updateAppointment}
+                        >
+
+                            Update Appointment
+
+                        </button>
+
+                        <button
+                            className="btn btn-secondary"
+                            onClick={clearForm}
+                        >
+
+                            Cancel
+
+                        </button>
+
+                    </>
+
+                ) : (
+
+                    <button
+                        className="btn btn-primary"
+                        onClick={saveAppointment}
+                    >
+
+                        Save Appointment
+
+                    </button>
+
+                )}
+
+            </div>
+
+        </div>
+
+    </div>
+    {/* Appointment Table */}
+
+<div className="card shadow border-0">
+
+    <div className="card-header bg-white d-flex justify-content-between align-items-center">
+
+        <h4 className="mb-0">
+
+            Appointment List
+
+        </h4>
+
+        <span className="badge bg-primary">
+
+            {filteredAppointments.length} Appointments
+
+        </span>
+
+    </div>
+
+    <div className="table-responsive">
+
+        <table className="table table-hover align-middle mb-0">
+
+            <thead className="table-light">
+
+                <tr>
+
+                    <th>ID</th>
+
+                    <th>Patient</th>
+
+                    <th>Doctor</th>
+
+                    <th>Date</th>
+
+                    <th>Time</th>
+
+                    <th>Status</th>
+
+                    <th className="text-center">
+
+                        Actions
+
+                    </th>
+
+                </tr>
+
+            </thead>
+
+            <tbody>
+
+                {loading ? (
 
                     <tr>
-                        <th>ID</th>
-                        <th>Patient</th>
-                        <th>Doctor</th>
-                        <th>Date</th>
-                        <th>Time</th>
-                        <th>Status</th>
-                        <th>Actions</th>
+
+                        <td
+                            colSpan="7"
+                            className="text-center py-5"
+                        >
+
+                            <div
+                                className="spinner-border text-primary"
+                                role="status"
+                            ></div>
+
+                        </td>
+
                     </tr>
 
-                </thead>
+                ) : filteredAppointments.length === 0 ? (
 
-                <tbody>
+                    <tr>
 
-                    {appointments.map((item) => (
+                        <td
+                            colSpan="7"
+                            className="text-center py-5 text-muted"
+                        >
+
+                            No Appointments Found
+
+                        </td>
+
+                    </tr>
+
+                ) : (
+
+                    filteredAppointments.map((item) => (
 
                         <tr key={item.appointmentId}>
 
-                            <td>{item.appointmentId}</td>
-                            <td>{item.patient?.name}</td>
-                            <td>{item.doctor?.name}</td>
-                            <td>{item.appointmentDate}</td>
-                            <td>{item.appointmentTime}</td>
-                            <td>{item.status}</td>
+                            <td>
+
+                                #{item.appointmentId}
+
+                            </td>
+
+                            <td className="fw-semibold">
+
+                                {item.patient?.name}
+
+                            </td>
 
                             <td>
 
+                                {item.doctor?.name}
+
+                            </td>
+
+                            <td>
+
+                                {item.appointmentDate}
+
+                            </td>
+
+                            <td>
+
+                                {item.appointmentTime}
+
+                            </td>
+
+                            <td>
+
+                                <span
+                                    className={`badge ${
+                                        item.status === "Completed"
+                                            ? "bg-success"
+                                            : item.status === "Cancelled"
+                                            ? "bg-danger"
+                                            : "bg-warning text-dark"
+                                    }`}
+                                >
+
+                                    {item.status}
+
+                                </span>
+
+                            </td>
+
+                            <td className="text-center">
+
                                 <button
-                                    className="btn btn-warning btn-sm me-2"
+                                    className="btn btn-outline-warning btn-sm me-2"
                                     onClick={() => editAppointment(item)}
                                 >
-                                    Edit
+
+                                    ✏️ Edit
+
                                 </button>
 
                                 <button
-                                    className="btn btn-danger btn-sm"
+                                    className="btn btn-outline-danger btn-sm"
                                     onClick={() =>
                                         deleteAppointment(item.appointmentId)
                                     }
                                 >
-                                    Delete
+
+                                    🗑 Delete
+
                                 </button>
 
                             </td>
 
                         </tr>
 
-                    ))}
+                    ))
 
-                </tbody>
+                )}
 
-            </table>
+            </tbody>
 
-        </MainLayout>
+        </table>
+
+    </div>
+
+</div>
+
+        </div>
+
+    </MainLayout>
 
     );
+
 }
 
 export default Appointments;
