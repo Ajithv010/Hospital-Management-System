@@ -1,4 +1,4 @@
-# 🏥 Hospital Management System
+# 🏥 Hospital Management System CURD operation
 
 A full-stack Hospital Management System developed using **React.js**, **Spring Boot**, and **MySQL** to simplify hospital administration through a modern web interface.
 
